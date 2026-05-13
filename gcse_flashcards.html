@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Monèt's GCSE Flashcards</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #22c55e;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --purple: #8b5cf6;
+    --bg: #0f172a;
+    --card-bg: #1e293b;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --border: #334155;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+  }
+
+  h1 { font-size: 1.4rem; font-weight: 700; text-align: center; margin-bottom: 4px; }
+  .subtitle { color: var(--muted); font-size: 0.85rem; text-align: center; margin-bottom: 20px; }
+
+  /* SUBJECT PICKER */
+  #subject-picker { width: 100%; max-width: 480px; }
+  .subject-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .subject-btn {
+    background: var(--card-bg);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 10px;
+    color: var(--text);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 1.3;
+  }
+  .subject-btn:hover, .subject-btn:active { border-color: var(--blue); background: #1e3a5f; }
+  .subject-btn .emoji { font-size: 1.4rem; display: block; margin-bottom: 5px; }
+
+  /* QUIZ VIEW */
+  #quiz-view { width: 100%; max-width: 480px; display: none; flex-direction: column; align-items: center; }
+
+  .quiz-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .quiz-title { font-size: 1rem; font-weight: 700; }
+  .back-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+
+  .progress-bar-wrap { width: 100%; background: var(--border); border-radius: 99px; height: 6px; margin-bottom: 6px; }
+  .progress-bar { height: 6px; border-radius: 99px; background: var(--blue); transition: width 0.3s; }
+  .progress-text { font-size: 0.78rem; color: var(--muted); text-align: right; margin-bottom: 16px; width: 100%; }
+
+  /* FLIP CARD */
+  .card-scene {
+    width: 100%;
+    height: 260px;
+    perspective: 1000px;
+    margin-bottom: 16px;
+    cursor: pointer;
+  }
+  .card-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+  .card-inner.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+  }
+  .card-front {
+    background: var(--card-bg);
+    border: 2px solid var(--blue);
+  }
+  .card-back {
+    background: #1a2e1a;
+    border: 2px solid var(--green);
+    transform: rotateY(180deg);
+  }
+
+  .card-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .card-front .card-label { color: #60a5fa; }
+  .card-back .card-label { color: var(--green); }
+
+  .card-text {
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .card-back .card-text { font-size: 0.9rem; font-weight: 400; line-height: 1.6; }
+
+  .tap-hint {
+    margin-top: 14px;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  /* MARK BUTTONS */
+  .mark-btns {
+    width: 100%;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .mark-btns.visible { opacity: 1; pointer-events: all; }
+  .mark-btn {
+    flex: 1;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .mark-btn:active { transform: scale(0.96); }
+  .btn-correct { background: var(--green); color: #fff; }
+  .btn-wrong { background: var(--red); color: #fff; }
+
+  /* SCORE SCREEN */
+  #score-screen {
+    width: 100%;
+    max-width: 480px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .score-circle {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    border: 5px solid var(--blue);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+  }
+  .score-num { font-size: 2.2rem; font-weight: 800; }
+  .score-denom { font-size: 0.85rem; color: var(--muted); }
+  .score-msg { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
+  .score-sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 24px; }
+
+  .score-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+  .action-btn {
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .action-btn:active { opacity: 0.8; }
+  .btn-again { background: var(--blue); color: #fff; }
+  .btn-new { background: var(--card-bg); color: var(--text); border: 2px solid var(--border); }
+
+  /* MISSED CARDS REVIEW */
+  .missed-section { width: 100%; margin-top: 16px; }
+  .missed-title { font-size: 0.85rem; font-weight: 700; color: var(--red); margin-bottom: 8px; text-align: left; }
+  .missed-item {
+    background: var(--card-bg);
+    border-left: 3px solid var(--red);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    text-align: left;
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+  .missed-q { font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .missed-a { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- SUBJECT PICKER -->
+<div id="subject-picker">
+  <h1>📚 Monèt's Flashcards</h1>
+  <p class="subtitle">Pick a subject to start — cards are randomised every round</p>
+  <div class="subject-grid">
+    <button class="subject-btn" onclick="startQuiz('maths')"><span class="emoji">🔢</span>Maths</button>
+    <button class="subject-btn" onclick="startQuiz('english-lit')"><span class="emoji">📖</span>English Literature</button>
+    <button class="subject-btn" onclick="startQuiz('english-lang')"><span class="emoji">✍️</span>English Language</button>
+    <button class="subject-btn" onclick="startQuiz('biology')"><span class="emoji">🧬</span>Biology</button>
+    <button class="subject-btn" onclick="startQuiz('chemistry')"><span class="emoji">⚗️</span>Chemistry</button>
+    <button class="subject-btn" onclick="startQuiz('physics')"><span class="emoji">⚡</span>Physics</button>
+    <button class="subject-btn" onclick="startQuiz('geography')"><span class="emoji">🌍</span>Geography</button>
+    <button class="subject-btn" onclick="startQuiz('rs')"><span class="emoji">✝️</span>Religious Studies</button>
+  </div>
+</div>
+
+<!-- QUIZ VIEW -->
+<div id="quiz-view">
+  <div class="quiz-header">
+    <div class="quiz-title" id="quiz-title"></div>
+    <button class="back-btn" onclick="goHome()">← Subjects</button>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+  <div class="progress-text" id="progress-text"></div>
+
+  <div class="card-scene" onclick="flipCard()">
+    <div class="card-inner" id="card-inner">
+      <div class="card-face card-front">
+        <div class="card-label">Question — tap to reveal answer</div>
+        <div class="card-text" id="card-question"></div>
+      </div>
+      <div class="card-face card-back">
+        <div class="card-label">Answer</div>
+        <div class="card-text" id="card-answer"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mark-btns" id="mark-btns">
+    <button class="mark-btn btn-wrong" onclick="markCard(false)">❌ Missed it</button>
+    <button class="mark-btn btn-correct" onclick="markCard(true)">✅ Got it</button>
+  </div>
+</div>
+
+<!-- SCORE SCREEN -->
+<div id="score-screen">
+  <h1>Round Complete!</h1>
+  <div class="score-circle">
+    <div class="score-num" id="score-num"></div>
+    <div class="score-denom" id="score-denom"></div>
+  </div>
+  <div class="score-msg" id="score-msg"></div>
+  <div class="score-sub" id="score-sub"></div>
+
+  <div class="score-actions">
+    <button class="action-btn btn-again" onclick="playAgain()">🔀 Reshuffle &amp; Go Again</button>
+    <button class="action-btn btn-new" onclick="goHome()">📚 Pick Another Subject</button>
+  </div>
+
+  <div class="missed-section" id="missed-section"></div>
+</div>
+
+<script>
+const SUBJECTS = {
+  'maths': {
+    name: '🔢 Maths',
+    cards: [
+      { q: "What is the formula for the area of a circle?", a: "A = πr² — where r is the radius. For example, if r = 5cm, then A = π × 25 = 78.5 cm²" },
+      { q: "What is the difference between mean, median and mode?", a: "Mean: add all values ÷ by how many. Median: middle value when ordered. Mode: most common value." },
+      { q: "How do you calculate the gradient of a straight line?", a: "Gradient = change in y ÷ change in x (rise over run). On a graph: pick two points and use (y₂−y₁)÷(x₂−x₁)" },
+      { q: "What is Pythagoras' theorem and when do you use it?", a: "a² + b² = c² — used in right-angled triangles to find a missing side. c is always the hypotenuse (longest side)." },
+      { q: "How do you expand double brackets, e.g. (x+3)(x+2)?", a: "Use FOIL: First, Outer, Inner, Last. (x+3)(x+2) = x²+2x+3x+6 = x²+5x+6" },
+      { q: "What is the quadratic formula?", a: "x = (−b ± √(b²−4ac)) / 2a — used to solve ax²+bx+c=0 when factorising doesn't work." },
+      { q: "How do you find the nth term of an arithmetic sequence?", a: "nth term = a + (n−1)d, where a = first term and d = common difference. E.g. 3, 7, 11... → nth term = 4n−1" },
+      { q: "What is the formula for simple interest?", a: "Interest = (Principal × Rate × Time) ÷ 100. E.g. £500 at 3% for 2 years = £500×3×2÷100 = £30" },
+      { q: "How do you calculate percentage change?", a: "(New Value − Original Value) ÷ Original Value × 100. Positive = increase, negative = decrease." },
+      { q: "What are the three trigonometric ratios (SOH CAH TOA)?", a: "Sin = Opposite/Hypotenuse, Cos = Adjacent/Hypotenuse, Tan = Opposite/Adjacent. Remember SOH CAH TOA." },
+      { q: "What is the probability of two independent events both occurring?", a: "Multiply the probabilities together. P(A and B) = P(A) × P(B). E.g. flipping two heads = ½ × ½ = ¼" },
+      { q: "How do you solve simultaneous equations by elimination?", a: "Make one variable's coefficient equal in both equations, then add or subtract to eliminate it, then solve for the other." },
+      { q: "What is the equation of a circle centred at the origin?", a: "x² + y² = r² — where r is the radius. E.g. a circle with radius 4 has equation x² + y² = 16." },
+      { q: "How do you calculate the volume of a cylinder?", a: "V = πr²h — where r is radius and h is height. Don't forget to include units³ in your answer." },
+      { q: "What does it mean for two lines to be perpendicular?", a: "Their gradients multiply to give −1. If one gradient is m, the perpendicular gradient is −1/m." },
+      { q: "What is the difference between a factor and a multiple?", a: "A factor divides exactly into a number (factors of 12: 1,2,3,4,6,12). A multiple is in the times table (multiples of 3: 3,6,9...)." },
+      { q: "How do you write a number in standard form?", a: "A × 10ⁿ where 1 ≤ A < 10. E.g. 4500 = 4.5 × 10³ and 0.003 = 3 × 10⁻³" },
+      { q: "What is a recurring decimal and how do you convert one to a fraction?", a: "A decimal that repeats, e.g. 0.333... Let x=0.333, then 10x=3.333, subtract: 9x=3, so x=3/9=1/3." },
+      { q: "How do you find the interior angle of a regular polygon?", a: "Interior angle = (n−2) × 180 ÷ n, where n = number of sides. E.g. regular hexagon (n=6): (4×180)÷6 = 120°" },
+      { q: "What is the difference between theoretical and experimental probability?", a: "Theoretical: calculated using equally likely outcomes (e.g. P(head)=½). Experimental: based on actual results of trials." }
+    ]
+  },
+  'english-lit': {
+    name: '📖 English Literature',
+    cards: [
+      { q: "In 'An Inspector Calls', what does the Inspector represent?", a: "The Inspector (Goole) represents social conscience, justice and possibly a supernatural force. His name sounds like 'ghoul'. He forces each character to confront their responsibility for Eva Smith's death." },
+      { q: "What is the key theme of social responsibility in 'An Inspector Calls'?", a: "Priestley argues that we are all responsible for each other in society ('We are members of one body'). The Birlings' selfish, capitalist attitudes are shown as morally wrong compared to the Inspector's socialist message." },
+      { q: "How does Priestley present Mr Birling in 'An Inspector Calls'?", a: "Birling is arrogant, self-interested and wrong in his predictions (Titanic, war). He represents the dangers of capitalism. Priestley uses dramatic irony — the audience knows Birling's confident predictions are all false." },
+      { q: "What does Sheila Birling's character arc show in 'An Inspector Calls'?", a: "Sheila transforms from a naive, sheltered girl into a morally aware young woman. She accepts responsibility and represents the younger generation's capacity to change — contrasting with her parents' stubborn denial." },
+      { q: "What is the significance of the play being set in 1912 but written in 1945?", a: "Priestley wrote after WWII to warn audiences not to return to the selfish, class-divided society of 1912. The two world wars Birling dismisses had already happened, giving the play a powerful message about learning from the past." },
+      { q: "What is the main theme of 'Macbeth' and how does ambition drive the plot?", a: "Unchecked ambition is the central theme. Macbeth's desire for power leads him to murder Duncan, then spiral into tyranny and paranoia. Shakespeare shows that ambition without moral restraint leads to destruction." },
+      { q: "How does Shakespeare present the relationship between Macbeth and Lady Macbeth?", a: "At first Lady Macbeth is dominant, calling on spirits to 'unsex' her. After the murder, roles reverse — Macbeth becomes ruthless and Lady Macbeth descends into guilt and madness, showing power corrupts differently in each." },
+      { q: "What is the importance of the witches in 'Macbeth'?", a: "The witches (Weird Sisters) represent fate, evil and temptation. Their prophecies plant the seed of ambition but Macbeth chooses to act on them. They reflect Jacobean fears of the supernatural and devil." },
+      { q: "How does Shakespeare use the motif of blood in 'Macbeth'?", a: "Blood symbolises guilt, violence and the consequences of ambition. 'Will all great Neptune's ocean wash this blood clean from my hand?' — Macbeth knows his guilt cannot be undone. Lady Macbeth's 'Out, damned spot' shows her guilt consuming her." },
+      { q: "What does the theme of appearance vs reality mean in 'Macbeth'?", a: "'Fair is foul and foul is fair' — things are not what they seem. Macbeth appears loyal but plans murder; the witches appear to offer truth but deceive. This theme warns against trusting surface appearances." },
+      { q: "What is the key message of 'Romeo and Juliet'?", a: "The play explores how hatred and family conflict destroy innocent love. The feud between Montagues and Capulets causes the deaths of Romeo and Juliet — love cannot survive in a world consumed by hate and pride." },
+      { q: "How does Shakespeare present love in 'Romeo and Juliet'?", a: "Love is shown as intense and impulsive (Romeo switches from Rosaline to Juliet instantly), but also as pure and transcending social barriers. It contrasts sharply with the violence and hatred surrounding it." },
+      { q: "What role does fate play in 'Romeo and Juliet'?", a: "Romeo and Juliet are described as 'star-crossed lovers' — fate is against them from the start. A series of bad timing and miscommunication (the letter not arriving) suggests their tragedy was inevitable." },
+      { q: "What is the significance of the poem 'Remains' by Simon Armitage?", a: "'Remains' explores the psychological trauma of war. A soldier cannot forget killing a looter — 'he's here in my head when I close my eyes'. It shows PTSD and the lasting damage combat does to mental health." },
+      { q: "What is the theme of 'Ozymandias' by Percy Shelley?", a: "The poem explores the futility of power and pride. The ruined statue of Ozymandias in the desert shows that even the greatest rulers are forgotten in time. 'My name is Ozymandias, King of Kings' — yet nothing remains." },
+      { q: "How does the poet present conflict in 'Bayonet Charge' by Ted Hughes?", a: "Hughes presents war as chaotic, terrifying and senseless. The soldier abandons his patriotic ideals — 'King, honour, human dignity, etcetera / Dropped like luxuries' — and acts on animal survival instinct alone." },
+      { q: "What is 'War Photographer' about and what is its key message?", a: "Duffy's poem follows a photographer processing images of war. It critiques how audiences briefly feel sympathy then carry on with comfortable lives — 'a hundred agonies in black-and-white / from which his editor will pick out five or six'." },
+      { q: "What techniques do examiners look for in a literature essay?", a: "AQA rewards: close language analysis (specific word choices), subject terminology (metaphor, juxtaposition etc.), context (writer's intentions, historical setting), and a clear argument throughout. Use PEE or PEEL structure." },
+      { q: "What is the difference between a simile and a metaphor?", a: "A simile compares using 'like' or 'as' (e.g. 'My love is like a red rose'). A metaphor states something IS something else (e.g. 'He is a lion in battle'). Both create vivid images but metaphors are more direct." },
+      { q: "What does 'dramatic irony' mean and how is it used in 'An Inspector Calls'?", a: "Dramatic irony is when the audience knows something characters don't. In 'An Inspector Calls', Birling confidently says the Titanic is 'unsinkable' and there won't be a war — the audience in 1945 knew both were disastrously wrong." }
+    ]
+  },
+  'english-lang': {
+    name: '✍️ English Language',
+    cards: [
+      { q: "What does DAFOREST stand for in language analysis?", a: "Direct address, Alliteration, Facts, Opinion, Rhetorical questions, Emotive language, Statistics, Triples (rule of three). These are persuasive techniques to identify and use in writing." },
+      { q: "What is the difference between implicit and explicit information?", a: "Explicit information is stated directly and clearly. Implicit information is suggested or implied — you have to infer it from clues in the text. AQA Q1 often asks you to identify explicit information." },
+      { q: "What does 'structural feature' mean and what are some examples?", a: "Structural features are choices about how a text is organised. Examples: story opening (in media res), time shifts (flashback/flashforward), narrative perspective, repetition of ideas, cliffhanger endings, shifts in focus." },
+      { q: "What is a rhetorical question and why do writers use it?", a: "A question asked for effect, not expecting an answer (e.g. 'Is this really the future we want?'). It engages readers, makes them think, and implies the writer's view without stating it directly." },
+      { q: "What is the purpose of a topic sentence?", a: "A topic sentence opens a paragraph and states its main idea clearly. It helps organise writing and makes argument easy to follow. Every paragraph in a strong essay or article starts with one." },
+      { q: "What is pathetic fallacy and why do writers use it?", a: "Pathetic fallacy is when weather or nature reflects the mood of the scene (e.g. a storm during a character's grief). It creates atmosphere and makes setting emotionally significant." },
+      { q: "What is the difference between first and third person narration?", a: "First person ('I', 'we'): narrator is a character — feels personal and intimate but limited viewpoint. Third person ('he', 'she', 'they'): narrator is outside — can be omniscient (all-knowing) or limited to one character's perspective." },
+      { q: "How do you analyse language effectively in a GCSE exam?", a: "Identify the specific word or technique → name it → explain the effect it has on the reader → link to writer's purpose. Go beyond surface meaning — ask 'why did the writer choose THIS word?'" },
+      { q: "What is a counterargument and why include one in persuasive writing?", a: "A counterargument acknowledges the opposing view before refuting it (e.g. 'Some may argue... however...'). It makes your argument more convincing because it shows you've considered other perspectives." },
+      { q: "What are the four purposes of writing (PAIR)?", a: "Persuade, Advise, Inform, and entertain (also argue, describe). Writers often combine more than one purpose. Always identify the main purpose and how language choices serve it." },
+      { q: "What is 'in media res' and what effect does it have?", a: "'In media res' means starting a story in the middle of the action. It immediately grabs the reader's attention and creates intrigue — they want to know how the situation developed." },
+      { q: "What is a semantic field and how does it work?", a: "A semantic field is a group of words related to the same topic or theme (e.g. war: 'battle', 'blood', 'surrender', 'march'). Writers use them to reinforce themes and create a consistent atmosphere." },
+      { q: "What is the effect of short sentences in writing?", a: "Short sentences create impact, urgency and tension. They slow the reader down and emphasise key points. Often used at dramatic moments or to contrast with longer, more flowing sentences." },
+      { q: "What is anaphora and what effect does it create?", a: "Anaphora is the repetition of a word or phrase at the start of successive clauses (e.g. 'We shall fight on the beaches, we shall fight on the landing grounds, we shall fight in the fields'). It creates rhythm, emphasis and momentum." },
+      { q: "What is the difference between a broadsheet and a tabloid newspaper?", a: "Broadsheets (e.g. The Times) use formal language, complex sentences and target educated readers. Tabloids (e.g. The Sun) use colloquial language, short sentences, sensational headlines and aim for mass appeal." },
+      { q: "What is sibilance and what mood can it create?", a: "Sibilance is the repetition of 's' sounds (e.g. 'the soft, silent sea'). It can create a hissing, sinister tone or a soft, soothing atmosphere depending on context." },
+      { q: "How should you structure a transactional writing response?", a: "Match form to purpose (letter, article, speech etc.) → engage reader from the opening → use a range of persuasive/structural techniques → vary sentence length → finish with a memorable conclusion. Stay in the right register throughout." },
+      { q: "What does 'register' mean in English Language?", a: "Register is the level of formality in language. Formal register uses standard English and complex vocabulary. Informal register uses colloquial language, contractions and a conversational tone. Match register to audience and purpose." },
+      { q: "What is juxtaposition and what effect does it create?", a: "Juxtaposition is placing two contrasting ideas or images side by side (e.g. rich/poor, dark/light). It highlights the differences between them and creates tension or irony." },
+      { q: "What techniques improve descriptive writing?", a: "Use all five senses (not just sight), vary sentence structure (short for impact, long for flow), use ambitious vocabulary, include figurative language (similes, metaphors, personification), create a clear atmosphere, and show don't tell." }
+    ]
+  },
+  'biology': {
+    name: '🧬 Biology',
+    cards: [
+      { q: "What is the difference between mitosis and meiosis?", a: "Mitosis: cell divides to make 2 identical daughter cells (same chromosome number) — for growth and repair. Meiosis: cell divides to make 4 genetically unique cells with half the chromosomes — for sexual reproduction (gametes)." },
+      { q: "What are the four bases in DNA and how do they pair?", a: "Adenine (A), Thymine (T), Cytosine (C), Guanine (G). A always pairs with T, C always pairs with G. This complementary base pairing holds the double helix together." },
+      { q: "What is the role of enzymes and how does pH affect them?", a: "Enzymes are biological catalysts that speed up reactions without being used up. Each has an optimal pH. Too acidic or alkaline changes the shape of the active site (denaturation) — the enzyme stops working." },
+      { q: "What is the difference between aerobic and anaerobic respiration?", a: "Aerobic: glucose + oxygen → carbon dioxide + water + lots of ATP energy. Anaerobic (no oxygen): glucose → lactic acid (animals) or ethanol + CO₂ (plants/yeast). Less energy released." },
+      { q: "What is homeostasis and give two examples?", a: "Homeostasis is maintaining a stable internal environment despite external changes. Examples: body temperature regulation (37°C) by sweating/shivering; blood glucose regulation by insulin and glucagon." },
+      { q: "What is natural selection?", a: "Organisms with favourable variations survive and reproduce, passing on those traits. Over generations, these advantageous traits become more common in the population. This is the mechanism of evolution (Darwin)." },
+      { q: "What is the difference between a pathogen and an antibody?", a: "A pathogen is a microorganism (bacteria, virus, fungus) that causes disease. An antibody is a protein made by white blood cells (lymphocytes) that specifically targets and destroys pathogens." },
+      { q: "What is osmosis?", a: "Osmosis is the movement of water molecules from an area of high water concentration to low water concentration across a partially permeable membrane. It requires no energy (passive process)." },
+      { q: "What are the main differences between plant and animal cells?", a: "Plant cells have: cell wall (cellulose), chloroplasts (for photosynthesis), large permanent vacuole. Animal cells have none of these. Both have: nucleus, cell membrane, mitochondria, ribosomes, cytoplasm." },
+      { q: "What is the equation for photosynthesis?", a: "6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂ (using light energy). Carbon dioxide + water → glucose + oxygen. Occurs in chloroplasts using chlorophyll to absorb light." },
+      { q: "What is the function of the nervous system?", a: "The nervous system detects stimuli, processes information and coordinates responses. Sensory neurons carry signals to the brain/spinal cord; motor neurons carry signals to effectors (muscles/glands)." },
+      { q: "What is a reflex arc?", a: "A rapid, automatic response to a stimulus. Pathway: stimulus → sensory receptor → sensory neuron → spinal cord (relay neuron) → motor neuron → effector (muscle). Bypasses the brain for speed." },
+      { q: "What is the difference between type 1 and type 2 diabetes?", a: "Type 1: autoimmune — pancreas doesn't produce insulin. Managed with insulin injections. Type 2: body becomes resistant to insulin, often linked to diet/obesity. Managed with diet, exercise, medication." },
+      { q: "What is the role of the kidneys?", a: "Kidneys filter blood to remove urea (waste from protein breakdown), excess water and salts. They maintain water balance (osmoregulation). Urine is produced and excreted via the bladder." },
+      { q: "What is genetic variation and why is it important?", a: "Genetic variation is differences in DNA between individuals. It arises from sexual reproduction (mixing of genes) and mutations. It's important for evolution — variation means some individuals may survive environmental changes." },
+      { q: "What are the main food groups and their functions?", a: "Carbohydrates: energy. Proteins: growth and repair. Fats: energy storage, insulation. Vitamins and minerals: various functions (e.g. vitamin C prevents scurvy, iron for haemoglobin). Water: all chemical reactions." },
+      { q: "How does the immune system respond to infection?", a: "1. Phagocytes engulf and destroy pathogens. 2. Lymphocytes produce antibodies specific to the pathogen's antigens. 3. Memory cells remain so the response is faster if the same pathogen is encountered again." },
+      { q: "What is the difference between dominant and recessive alleles?", a: "Dominant alleles are expressed when present (shown with capital letter, e.g. B). Recessive alleles are only expressed when two copies are present (bb). Heterozygous (Bb) = dominant phenotype." },
+      { q: "What are the stages of the human menstrual cycle?", a: "Day 1–5: menstruation (uterus lining breaks down). Day 1–13: FSH causes follicle/egg to develop; oestrogen rebuilds lining. Day 14: ovulation (egg released by LH surge). Day 15–28: progesterone maintains lining." },
+      { q: "What is the difference between benign and malignant tumours?", a: "Benign tumours grow slowly and stay in one place — not cancerous. Malignant tumours grow rapidly and can spread (metastasise) to other parts of the body via blood or lymph — cancerous and life-threatening." }
+    ]
+  },
+  'chemistry': {
+    name: '⚗️ Chemistry',
+    cards: [
+      { q: "What is the difference between an atom, element, compound and mixture?", a: "Atom: smallest particle of an element. Element: one type of atom only (e.g. O₂). Compound: two or more elements chemically bonded (e.g. H₂O). Mixture: two or more substances not chemically bonded (can be separated)." },
+      { q: "What is the difference between ionic and covalent bonding?", a: "Ionic: metal transfers electrons to non-metal → oppositely charged ions attract. Covalent: two non-metals share pairs of electrons. Ionic compounds form giant lattice structures; covalent form molecules or giant lattices." },
+      { q: "What is the law of conservation of mass?", a: "Mass is neither created nor destroyed in a chemical reaction. The total mass of reactants always equals the total mass of products. This is why chemical equations must be balanced." },
+      { q: "What is the difference between an acid and an alkali? What is pH?", a: "Acid: pH below 7, produces H⁺ ions in solution. Alkali: pH above 7, produces OH⁻ ions. Neutral: pH 7. pH is a scale from 0–14 measuring how acidic or alkaline a substance is." },
+      { q: "What is the reactivity series and why is it useful?", a: "The reactivity series ranks metals from most to least reactive: K, Na, Ca, Mg, Al, Zn, Fe, Pb, Cu, Ag, Au. It predicts displacement reactions — a more reactive metal displaces a less reactive one from a compound." },
+      { q: "What is electrolysis and when is it used?", a: "Electrolysis uses electricity to break down an ionic compound in solution or when molten. Positive ions move to the cathode (negative electrode); negative ions to the anode. Used to extract aluminium and purify copper." },
+      { q: "What is the difference between exothermic and endothermic reactions?", a: "Exothermic: releases energy to surroundings — temperature rises (combustion, neutralisation, respiration). Endothermic: absorbs energy from surroundings — temperature falls (thermal decomposition, photosynthesis)." },
+      { q: "What are the three states of matter and how do particles differ?", a: "Solid: particles packed tightly, fixed positions, vibrate only. Liquid: particles close but can move, fixed volume no fixed shape. Gas: particles far apart, move freely, fill any container. Energy increases: solid → liquid → gas." },
+      { q: "What is a catalyst and how does it work?", a: "A catalyst speeds up a chemical reaction without being used up itself. It provides an alternative reaction pathway with lower activation energy. This means more particles have enough energy to react." },
+      { q: "What is the difference between oxidation and reduction (OILRIG)?", a: "OILRIG: Oxidation Is Loss (of electrons), Reduction Is Gain (of electrons). They always happen together (redox reactions). E.g. in electrolysis: metal ions at cathode gain electrons (reduction)." },
+      { q: "What makes a metal a good conductor and why is graphite different to other non-metals?", a: "Metals conduct because delocalised electrons carry charge. Graphite (a form of carbon) also conducts because it has one delocalised electron per carbon atom — unusual for a non-metal." },
+      { q: "How do you calculate moles?", a: "Moles = mass ÷ relative formula mass (Mr). E.g. moles of 18g of water (Mr=18) = 18÷18 = 1 mole. Also: moles = concentration × volume (in litres)." },
+      { q: "What are the products of burning hydrocarbons?", a: "Complete combustion: hydrocarbon + oxygen → carbon dioxide + water. Incomplete combustion (limited O₂): produces carbon monoxide (toxic) and carbon/soot instead of CO₂." },
+      { q: "What is crude oil and how is it separated?", a: "Crude oil is a mixture of hydrocarbons. It's separated by fractional distillation — heated in a fractionating column; different fractions (petrol, diesel, kerosene etc.) condense at different temperatures based on chain length." },
+      { q: "What is the difference between addition and condensation polymerisation?", a: "Addition polymerisation: unsaturated monomers (with C=C double bonds) join together — no other products formed (e.g. poly(ethene)). Condensation polymerisation: monomers join with loss of small molecules like water (e.g. nylon, polyester)." },
+      { q: "What are the properties of ionic compounds?", a: "High melting/boiling points (strong electrostatic forces). Conduct electricity when molten or dissolved in water (ions free to move) but NOT when solid. Brittle. Usually soluble in water." },
+      { q: "What is the difference between a physical and chemical change?", a: "Physical change: no new substance made, usually reversible (e.g. melting, dissolving). Chemical change: new substances formed, usually irreversible (e.g. burning, rusting, cooking). Signs: gas, precipitate, colour change, temperature change." },
+      { q: "What is Le Chatelier's Principle?", a: "If a system at equilibrium is disturbed, it shifts to oppose the change. E.g. increase pressure → equilibrium shifts to the side with fewer gas molecules. Increase temperature → equilibrium shifts in the endothermic direction." },
+      { q: "What are the uses of the noble gases and why are they unreactive?", a: "Noble gases (Group 0: He, Ne, Ar, Kr, Xe) have full outer electron shells so don't need to gain/lose electrons. Uses: helium in balloons (safe, low density), argon in light bulbs (inert atmosphere), neon in signs." },
+      { q: "What is the difference between empirical and molecular formula?", a: "Empirical formula: simplest whole-number ratio of atoms (e.g. CH₂O). Molecular formula: actual number of atoms in a molecule (e.g. C₆H₁₂O₆ for glucose). The molecular formula is a multiple of the empirical formula." }
+    ]
+  },
+  'physics': {
+    name: '⚡ Physics',
+    cards: [
+      { q: "What is the difference between speed and velocity?", a: "Speed is a scalar quantity — it only has magnitude (e.g. 30 m/s). Velocity is a vector — it has both magnitude AND direction (e.g. 30 m/s north). Acceleration involves a change in velocity." },
+      { q: "What is Newton's Second Law of Motion?", a: "Force = mass × acceleration (F = ma). The greater the force applied to an object, or the smaller its mass, the greater its acceleration. Force is measured in Newtons (N)." },
+      { q: "What is the difference between potential energy and kinetic energy?", a: "Potential energy (GPE) = stored energy due to position: GPE = mgh (mass × gravitational field strength × height). Kinetic energy = energy of movement: KE = ½mv². Both measured in joules." },
+      { q: "What is Ohm's Law?", a: "Voltage = Current × Resistance (V = IR). Current is measured in amps (A), resistance in ohms (Ω), voltage in volts (V). If resistance increases at constant voltage, current decreases." },
+      { q: "What is the difference between series and parallel circuits?", a: "Series: components in a single loop — same current throughout, voltage shared. If one fails, all fail. Parallel: components in separate branches — same voltage, currents add up. If one fails, others work." },
+      { q: "What are the types of electromagnetic radiation and what do they have in common?", a: "Radio, microwave, infrared, visible light, ultraviolet, X-rays, gamma rays (in order of increasing frequency/energy). All travel at the speed of light (3×10⁸ m/s) and are transverse waves." },
+      { q: "What is the difference between longitudinal and transverse waves?", a: "Transverse: oscillations perpendicular to direction of travel (e.g. light, water waves). Longitudinal: oscillations parallel to direction of travel (e.g. sound). Sound cannot travel in a vacuum." },
+      { q: "What is the difference between nuclear fission and fusion?", a: "Fission: heavy nucleus splits into two smaller nuclei, releasing energy (used in nuclear reactors). Fusion: two light nuclei combine to form a heavier nucleus, releasing more energy (powers the Sun, future clean energy)." },
+      { q: "What are alpha, beta and gamma radiation?", a: "Alpha (α): 2 protons + 2 neutrons, stopped by paper, most ionising. Beta (β): fast electron, stopped by aluminium. Gamma (γ): electromagnetic wave, stopped by thick lead, least ionising but most penetrating." },
+      { q: "What is the equation for power?", a: "Power = Energy transferred ÷ time (P = E/t). Also P = IV (current × voltage). Measured in Watts (W). 1 Watt = 1 Joule per second." },
+      { q: "What is the difference between weight and mass?", a: "Mass is the amount of matter in an object (kg) — constant everywhere. Weight is the gravitational force acting on that mass (N): W = mg. On the Moon (g = 1.6 N/kg), you weigh less but your mass is the same." },
+      { q: "What is the wave equation?", a: "Wave speed = frequency × wavelength (v = fλ). Speed in m/s, frequency in Hz, wavelength in metres. All EM waves travel at c = 3 × 10⁸ m/s in a vacuum." },
+      { q: "What is specific heat capacity?", a: "The amount of energy needed to raise 1 kg of a substance by 1°C. Equation: E = mcΔT (energy = mass × specific heat capacity × temperature change). Water has a high SHC (4200 J/kg°C)." },
+      { q: "What is the difference between reflection, refraction and diffraction?", a: "Reflection: wave bounces off a surface. Refraction: wave changes speed and bends when entering a new medium. Diffraction: wave spreads out when passing through a gap or around an obstacle." },
+      { q: "How does a transformer work and what is the transformer equation?", a: "Transformers change voltage using electromagnetic induction. Step-up increases voltage, step-down decreases it. Equation: Vp/Vs = np/ns (primary voltage/secondary voltage = primary turns/secondary turns)." },
+      { q: "What is the principle of conservation of energy?", a: "Energy cannot be created or destroyed — only transferred between stores. Total energy in a closed system always remains the same. In practice, some energy is always dissipated as heat (wasted)." },
+      { q: "What is terminal velocity?", a: "Terminal velocity is reached when the driving force (e.g. weight) equals the resistive force (drag/air resistance). Acceleration = 0 so the object falls at constant speed. Skydivers reach terminal velocity before opening parachute." },
+      { q: "What is the difference between a conductor and an insulator?", a: "Conductor: allows charge (electrons) to flow freely — metals are good conductors. Insulator: does not allow charge to flow — electrons are tightly bound. Examples: copper (conductor), rubber (insulator)." },
+      { q: "What is pressure and what is the equation for pressure in a fluid?", a: "Pressure = Force ÷ Area (P = F/A, in Pascals). In a fluid: pressure increases with depth — P = hρg (height × density × gravitational field strength). Pressure acts equally in all directions in a fluid." },
+      { q: "What does half-life mean in radioactive decay?", a: "Half-life is the time taken for half the radioactive nuclei in a sample to decay. After 1 half-life → 50% remains, after 2 → 25%, after 3 → 12.5% etc. Each radioactive isotope has a fixed half-life." }
+    ]
+  },
+  'geography': {
+    name: '🌍 Geography',
+    cards: [
+      { q: "What is the difference between weather and climate?", a: "Weather is the short-term atmospheric conditions at a specific place (e.g. raining today). Climate is the average weather patterns of a place over a long period (usually 30+ years)." },
+      { q: "What causes earthquakes?", a: "Earthquakes are caused by the movement of tectonic plates. Stress builds up along plate boundaries; when it's released suddenly, seismic waves radiate from the focus (deep) through the epicentre (surface above focus)." },
+      { q: "What is the difference between a constructive and destructive plate boundary?", a: "Constructive: plates move apart, magma rises to fill gap — forms new crust, mid-ocean ridges, gentle volcanoes. Destructive: oceanic plate subducts under continental plate — deep ocean trenches, violent volcanoes, earthquakes." },
+      { q: "What is the difference between push and pull factors in migration?", a: "Push factors drive people away from an area (poverty, war, natural disasters, lack of jobs). Pull factors attract people to a new place (better jobs, healthcare, safety, education). Migration is usually a combination of both." },
+      { q: "What is urbanisation and what are its causes?", a: "Urbanisation is the increase in the proportion of people living in urban areas (cities). Caused by: rural-urban migration (push/pull factors), natural population increase in cities. Especially rapid in LICs/NEEs." },
+      { q: "What is the difference between a LIC, NEE and HIC?", a: "LIC (Low Income Country): low GDP, less development (e.g. Ethiopia). NEE (Newly Emerging Economy): rapidly developing (e.g. China, India, Nigeria). HIC (High Income Country): highly developed, high GDP (e.g. UK, USA)." },
+      { q: "What is the demographic transition model?", a: "A model showing how birth rate, death rate and population change as a country develops. Stage 1: high birth/death rates. Stage 2: death rate falls. Stage 3: birth rate falls. Stage 4: low birth/death rates. Stage 5: possible population decline." },
+      { q: "What are the causes of global warming?", a: "Enhanced greenhouse effect — burning fossil fuels releases CO₂ and methane; deforestation reduces CO₂ absorption. These greenhouse gases trap heat in the atmosphere, raising global temperatures." },
+      { q: "What is the difference between mitigation and adaptation in climate change?", a: "Mitigation: actions to reduce causes of climate change (e.g. renewable energy, reforestation). Adaptation: adjusting to cope with effects already happening (e.g. sea defences, drought-resistant crops). Both are needed." },
+      { q: "What is a carbon footprint?", a: "The total amount of greenhouse gases (especially CO₂) produced by an individual, organisation or country. Measured in tonnes of CO₂ equivalent. Reduced by using renewables, eating less meat, flying less." },
+      { q: "What are the three types of rock and how are they formed?", a: "Igneous: formed from cooled magma/lava. Sedimentary: formed from compressed sediment layers (e.g. limestone). Metamorphic: existing rock changed by heat and pressure (e.g. marble from limestone). The rock cycle links all three." },
+      { q: "What is the difference between erosion, transportation and deposition?", a: "Erosion: wearing away of rock/land by water, wind, ice. Transportation: material carried by river/wind/ice. Deposition: material dropped when energy is lost. Rivers erode upland, transport material, deposit in lowland." },
+      { q: "How are ox-bow lakes formed?", a: "Meanders become increasingly curved due to erosion on the outer bank and deposition on the inner bank. The river eventually cuts through the meander neck; deposition seals off the loop, forming an ox-bow lake." },
+      { q: "What is the difference between renewable and non-renewable energy?", a: "Renewable: will not run out and replenishes naturally (solar, wind, hydro, geothermal). Non-renewable: finite supply that took millions of years to form (coal, oil, gas). Burning fossil fuels releases CO₂." },
+      { q: "What is a natural hazard and what affects a place's vulnerability to them?", a: "A natural hazard is a natural event that poses a risk to people. Vulnerability depends on: proximity to hazard, level of development (HICs cope better), quality of governance, preparedness and infrastructure." },
+      { q: "What is the multiplier effect in geography?", a: "When investment in an area creates jobs → workers spend money locally → creates more jobs and wealth → attracts more businesses and people. This positive cycle generates further economic growth." },
+      { q: "What is sustainable development?", a: "Development that meets the needs of the present without compromising the ability of future generations to meet their own needs (Brundtland 1987). Balances economic growth, social wellbeing and environmental protection." },
+      { q: "What causes a river flood?", a: "Heavy or prolonged rainfall, snowmelt, impermeable surfaces (urban areas), deforestation (less interception), steep slopes (fast runoff), saturated ground. These increase surface runoff and river discharge above bankfull." },
+      { q: "What is a transnational corporation (TNC) and what are its impacts?", a: "A TNC is a company operating in more than one country (e.g. Nike, Apple). Positive impacts: jobs, infrastructure, technology transfer. Negative impacts: profit repatriation, low wages, environmental damage, dependency." },
+      { q: "What is the difference between primary, secondary and tertiary industry?", a: "Primary: extraction of raw materials (farming, mining, fishing). Secondary: manufacturing/processing (making goods). Tertiary: services (retail, healthcare, education). HICs have mostly tertiary; LICs mostly primary." }
+    ]
+  },
+  'rs': {
+    name: '✝️ Religious Studies',
+    cards: [
+      { q: "What are the Five Pillars of Islam?", a: "The five duties every Muslim must follow: Shahada (declaration of faith), Salah (prayer five times daily), Zakat (giving 2.5% of savings to charity), Sawm (fasting during Ramadan), and Hajj (pilgrimage to Mecca)." },
+      { q: "What is the Shahada and why is it important?", a: "The Shahada is the declaration of faith: 'There is no God but Allah, and Muhammad is his messenger.' Saying it with sincerity makes a person a Muslim — it is the most fundamental of the Five Pillars." },
+      { q: "What is Salah and how many times a day do Muslims pray?", a: "Salah is the ritual prayer performed five times a day (Fajr, Dhuhr, Asr, Maghrib, Isha). Muslims face Mecca (the Qibla) and follow a set sequence of movements and Arabic recitations." },
+      { q: "What is Zakat and how much must Muslims give?", a: "Zakat is the compulsory giving of 2.5% of savings to those in need. It purifies wealth and reduces inequality. It reflects the Islamic belief in social justice and the brotherhood of all Muslims (Ummah)." },
+      { q: "What is Sawm? When do Muslims fast and why?", a: "Sawm is fasting during the holy month of Ramadan. Muslims abstain from food, drink and bad behaviour from dawn to sunset. It teaches self-discipline, gratitude to Allah, and empathy for those who are poor." },
+      { q: "What is Hajj and who must perform it?", a: "Hajj is the annual pilgrimage to Mecca, Saudi Arabia. Every Muslim who is physically and financially able must perform it at least once in their lifetime. It commemorates the actions of the Prophet Ibrahim." },
+      { q: "What is the Qur'an and why is it important to Muslims?", a: "The Qur'an is the holy book of Islam, believed to be the direct word of Allah revealed to the Prophet Muhammad through the angel Jibril. Written in Arabic, it guides every aspect of Muslim belief and practice." },
+      { q: "What are the 99 Names of Allah?", a: "The 99 Names (Asma ul-Husna) describe Allah's qualities — e.g. Al-Rahman (The Most Merciful), Al-Rahim (The Most Compassionate), Al-Malik (The King). They help Muslims understand and connect with God." },
+      { q: "What is the Ummah?", a: "The Ummah is the worldwide community of Muslims. It emphasises the brotherhood and sisterhood of all believers, regardless of nationality or race. Zakat and Hajj both help to strengthen and unify the Ummah." },
+      { q: "What is the Islamic belief about the Day of Judgement?", a: "Muslims believe that after death, everyone will be resurrected and judged by Allah based on their deeds. Those who lived righteously will enter Jannah (paradise); those who did not will face Jahannam (hell)." },
+      { q: "What is the Holy Trinity in Christianity?", a: "The Holy Trinity is the Christian belief that God exists as three persons in one: God the Father, God the Son (Jesus Christ), and God the Holy Spirit. All three are equally God but are distinct persons." },
+      { q: "What is the Incarnation?", a: "The Incarnation is the Christian belief that God became human in the person of Jesus Christ. Jesus is fully God and fully human. Christians see this as the ultimate act of love — God entering creation to save humanity." },
+      { q: "What is the Resurrection and why is it central to Christianity?", a: "The Resurrection is the belief that Jesus rose from the dead three days after his crucifixion. It is the foundation of Christian faith — showing Jesus conquered sin and death, giving Christians hope of eternal life." },
+      { q: "What is the Eucharist (Holy Communion)?", a: "A Christian sacrament where bread and wine are shared in memory of the Last Supper. Catholics believe the bread and wine become the body and blood of Christ (transubstantiation); Protestants see it as symbolic." },
+      { q: "What is the Sanctity of Life?", a: "The belief that all human life is sacred and a gift from God, and therefore must be respected and protected. It influences Christian and Islamic views on abortion, euthanasia, war and capital punishment." },
+      { q: "What is the Golden Rule and where does it come from?", a: "'Treat others as you wish to be treated' (Matthew 7:12). It is a core Christian ethical teaching underpinning justice, charity and how to treat all people with dignity. A similar principle exists in Islam." },
+      { q: "What is Stewardship in a religious context?", a: "Stewardship is the Christian (and Islamic) belief that humans are caretakers of God's creation, not owners. This calls believers to care for the environment and use resources responsibly for future generations." },
+      { q: "What is Original Sin?", a: "Original Sin is the Christian teaching that humanity inherited a flawed, sinful nature from Adam and Eve's disobedience in the Garden of Eden. Jesus's death on the cross (the Atonement) offers salvation from this sin." },
+      { q: "What are the key differences between worship in a mosque and a church?", a: "Mosque: no images of God; shoes removed; men and women pray separately; prayers in Arabic; led by an Imam. Church: may have statues/stained glass; mixed congregation; services in local language; led by a priest or minister." },
+      { q: "What is Justice in religious terms and why does it matter?", a: "Justice means fairness and right treatment for all people. Both Christianity and Islam teach that God is just and believers must work for justice — challenging poverty, inequality and oppression. This links to Zakat (Islam) and Christian charity." }
+    ]
+  }
+};
+
+// State
+let currentSubject = null;
+let deck = [];
+let currentIndex = 0;
+let correct = 0;
+let wrong = 0;
+let missedCards = [];
+let isFlipped = false;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz(subjectKey) {
+  currentSubject = subjectKey;
+  deck = shuffle(SUBJECTS[subjectKey].cards);
+  currentIndex = 0;
+  correct = 0;
+  wrong = 0;
+  missedCards = [];
+
+  document.getElementById('subject-picker').style.display = 'none';
+  document.getElementById('score-screen').style.display = 'none';
+  document.getElementById('quiz-view').style.display = 'flex';
+  document.getElementById('quiz-title').textContent = SUBJECTS[subjectKey].name;
+
+  showCard();
+}
+
+function showCard() {
+  if (currentIndex >= deck.length) {
+    showScore();
+    return;
+  }
+  isFlipped = false;
+  const card = deck[currentIndex];
+  document.getElementById('card-inner').classList.remove('flipped');
+  document.getElementById('card-question').textContent = card.q;
+  document.getElementById('card-answer').textContent = card.a;
+  document.getElementById('mark-btns').classList.remove('visible');
+
+  const pct = (currentIndex / deck.length) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = `Card ${currentIndex + 1} of ${deck.length}`;
+}
+
+function flipCard() {
+  if (isFlipped) return;
+  isFlipped = true;
+  document.getElementById('card-inner').classList.add('flipped');
+  document.getElementById('mark-btns').classList.add('visible');
+}
+
+function markCard(gotIt) {
+  if (gotIt) {
+    correct++;
+  } else {
+    wrong++;
+    missedCards.push(deck[currentIndex]);
+  }
+  currentIndex++;
+  showCard();
+}
+
+function showScore() {
+  document.getElementById('quiz-view').style.display = 'none';
+  document.getElementById('score-screen').style.display = 'flex';
+
+  const total = deck.length;
+  const pct = Math.round((correct / total) * 100);
+  document.getElementById('score-num').textContent = correct;
+  document.getElementById('score-denom').textContent = `out of ${total}`;
+
+  let msg, sub;
+  if (pct >= 90) { msg = '🏆 Outstanding!'; sub = 'You absolutely nailed it. Grade 9 territory!'; }
+  else if (pct >= 75) { msg = '🌟 Really Strong!'; sub = 'Great work — you know this subject well.'; }
+  else if (pct >= 60) { msg = '👍 Good Effort!'; sub = 'Solid foundation — review the ones you missed.'; }
+  else if (pct >= 40) { msg = '📚 Keep Revising'; sub = 'You\'re getting there — another round will help a lot.'; }
+  else { msg = '💪 Don\'t Give Up!'; sub = 'Everyone starts somewhere. Go again and you\'ll improve.'; }
+
+  document.getElementById('score-msg').textContent = msg;
+  document.getElementById('score-sub').textContent = sub;
+
+  // Score circle colour
+  const circle = document.querySelector('.score-circle');
+  if (pct >= 75) circle.style.borderColor = 'var(--green)';
+  else if (pct >= 50) circle.style.borderColor = 'var(--blue)';
+  else circle.style.borderColor = 'var(--red)';
+
+  // Missed cards
+  const missedSec = document.getElementById('missed-section');
+  if (missedCards.length > 0) {
+    let html = `<div class="missed-title">❌ ${missedCards.length} card${missedCards.length > 1 ? 's' : ''} to review:</div>`;
+    missedCards.forEach(c => {
+      html += `<div class="missed-item"><div class="missed-q">Q: ${c.q}</div><div class="missed-a">A: ${c.a}</div></div>`;
+    });
+    missedSec.innerHTML = html;
+  } else {
+    missedSec.innerHTML = '<div style="color:var(--green);font-size:0.9rem;margin-top:8px;">✅ Perfect round — no cards to review!</div>';
+  }
+}
+
+function playAgain() {
+  startQuiz(currentSubject);
+}
+
+function goHome() {
+  document.getElementById('quiz-view').style.display = 'none';
+  document.getElementById('score-screen').style.display = 'none';
+  document.getElementById('subject-picker').style.display = 'block';
+}
+</script>
+</body>
+</html>
