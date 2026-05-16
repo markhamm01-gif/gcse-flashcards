@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Revision History · GCSE Quiz</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .history-wrap { max-width: 860px; margin: 30px auto; padding: 0 20px 60px; }
+    .history-header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 6px; }
+    .history-header h1 { font-size: 1.4rem; color: #1a3a6b; }
+    .history-meta { font-size: .87rem; color: #6b7280; margin-bottom: 24px; }
+    .history-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 28px; }
+    .stats-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 28px; }
+    .stat-card { background: #fff; border: 1.5px solid #dde1ea; border-radius: 10px; padding: 14px 16px; text-align: center; }
+    .stat-card .stat-val { font-size: 1.8rem; font-weight: 800; color: #1a3a6b; line-height: 1.1; }
+    .stat-card .stat-lbl { font-size: .78rem; color: #6b7280; margin-top: 4px; }
+    .trend-card { background: #fff; border: 1.5px solid #dde1ea; border-radius: 10px; padding: 16px 20px; margin-bottom: 24px; font-size: .92rem; line-height: 1.7; color: #1c1c1c; }
+    .trend-card .trend-up { color: #2e7d32; font-weight: 700; }
+    .trend-card .trend-down { color: #c62828; font-weight: 700; }
+    .trend-card .trend-same { color: #e8a020; font-weight: 700; }
+    .history-table-wrap { overflow-x: auto; border-radius: 10px; border: 1.5px solid #dde1ea; }
+    table { width: 100%; border-collapse: collapse; font-size: .91rem; background: #fff; }
+    thead th { background: #1a3a6b; color: #fff; padding: 11px 14px; text-align: left; font-weight: 600; font-size: .83rem; letter-spacing: .3px; white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid #eef0f5; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:nth-child(even) { background: #f8f9fc; }
+    tbody td { padding: 10px 14px; vertical-align: middle; }
+    .pct-badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: .8rem; font-weight: 700; }
+    .pct-a { background: #e8f5e9; color: #1b5e20; }
+    .pct-b { background: #e3f2fd; color: #0d47a1; }
+    .pct-c { background: #fff3e0; color: #7c4a00; }
+    .pct-d { background: #fce8e8; color: #7f1010; }
+    .grade-cell { font-weight: 700; color: #1a3a6b; }
+    .imp { font-size: .85rem; }
+    .imp-up { color: #2e7d32; } .imp-down { color: #c62828; } .imp-same { color: #9aa3b2; }
+    .empty-state { background: #fff; border: 1.5px solid #dde1ea; border-radius: 10px; padding: 40px 24px; text-align: center; color: #6b7280; }
+    .empty-state h2 { font-size: 1.1rem; margin-bottom: 8px; color: #1a3a6b; }
+    .empty-state p { font-size: .9rem; margin-bottom: 20px; }
+    .no-nickname { background: #fff3e0; border: 2px solid #e8a020; border-radius: 10px; padding: 24px; text-align: center; margin-bottom: 24px; }
+    .no-nickname h2 { font-size: 1.1rem; color: #7c4a00; margin-bottom: 6px; }
+    .no-nickname p { font-size: .88rem; color: #7c4a00; }
+    .privacy-strip { margin-top: 28px; background: #f4f6fa; border-radius: 8px; padding: 10px 13px; font-size: .8rem; color: #6b7280; line-height: 1.55; }
+    @media (max-width: 520px) { .history-header h1 { font-size: 1.2rem; } thead th, tbody td { padding: 8px 10px; } }
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="logo">GCSE <span>Revision</span> Quiz</div>
+    <div class="sub" id="header-sub">Revision History</div>
+  </div>
+</header>
+<div class="history-wrap">
+  <a class="back-link" href="index.html">← Back to subjects</a>
+  <div class="history-header"><h1 id="page-title">My Revision History</h1></div>
+  <p class="history-meta" id="history-meta"></p>
+  <div id="main-content"></div>
+  <div class="privacy-strip">🔒 Results are saved only on this device and browser. They are never sent anywhere. Clearing your browser data will also remove your results.</div>
+</div>
+<script>
+  const nickname = sessionStorage.getItem('gcse_nickname') || '';
+  const content  = document.getElementById('main-content');
+  function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function pctClass(p) { if (p >= 70) return 'pct-a'; if (p >= 55) return 'pct-b'; if (p >= 45) return 'pct-c'; return 'pct-d'; }
+  function allResults() { try { return JSON.parse(localStorage.getItem('gcse_results') || '[]'); } catch(e) { return []; } }
+  function myResults() { if (!nickname) return []; return allResults().filter(r => r.nickname === nickname); }
+  function render() {
+    content.innerHTML = '';
+    if (!nickname) {
+      document.getElementById('page-title').textContent = 'Revision History';
+      document.getElementById('history-meta').textContent = '';
+      document.getElementById('header-sub').textContent = 'Revision History';
+      content.innerHTML = '<div class="no-nickname"><h2>No nickname set</h2><p>Go back to the home page and enter a nickname to track and view your results.</p></div><div style="text-align:center"><a class="btn-primary" href="index.html" style="display:inline-block;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:1rem;font-weight:700;background:#1a3a6b;color:#fff;">Go to home page</a></div>';
+      return;
+    }
+    const results = myResults();
+    document.getElementById('header-sub').textContent = nickname + ' — Revision History';
+    document.getElementById('page-title').textContent = nickname + '\'s Revision History';
+    if (results.length === 0) {
+      document.getElementById('history-meta').textContent = 'No results saved yet.';
+      content.innerHTML = '<div class="empty-state"><h2>No results yet</h2><p>Complete a quiz to see your results here.</p><a class="btn-primary" href="index.html" style="display:inline-block;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:1rem;font-weight:700;background:#1a3a6b;color:#fff;">Start a quiz</a></div>';
+      return;
+    }
+    const sorted = results.slice().sort((a,b) => (b.ts||0) - (a.ts||0));
+    document.getElementById('history-meta').textContent = results.length + ' quiz' + (results.length !== 1 ? 'zes' : '') + ' completed';
+    const avgPct  = Math.round(results.reduce((s,r) => s + r.pct, 0) / results.length);
+    const bestPct = Math.max(...results.map(r => r.pct));
+    const subjects = [...new Set(results.map(r => r.subject))].length;
+    const statsHtml = '<div class="stats-strip"><div class="stat-card"><div class="stat-val">' + results.length + '</div><div class="stat-lbl">Quizzes completed</div></div><div class="stat-card"><div class="stat-val">' + avgPct + '%</div><div class="stat-lbl">Average score</div></div><div class="stat-card"><div class="stat-val">' + bestPct + '%</div><div class="stat-lbl">Best score</div></div><div class="stat-card"><div class="stat-val">' + subjects + '</div><div class="stat-lbl">Subject' + (subjects !== 1 ? 's' : '') + ' covered</div></div></div>';
+    let trendHtml = '';
+    if (sorted.length >= 2) {
+      const diff = sorted[0].pct - sorted[1].pct;
+      let arrow, cls, msg;
+      if (diff > 0) { arrow = '↑'; cls = 'trend-up'; msg = '+' + diff + '% vs last attempt'; }
+      else if (diff < 0) { arrow = '↓'; cls = 'trend-down'; msg = diff + '% vs last attempt'; }
+      else { arrow = '→'; cls = 'trend-same'; msg = 'Same as last attempt'; }
+      trendHtml = '<div class="trend-card">Latest: <strong>' + sorted[0].subject + '</strong> on ' + sorted[0].date + ' — <span class="' + cls + '">' + arrow + ' ' + msg + '</span></div>';
+    }
+    const actionsHtml = '<div class="history-actions"><button class="btn-secondary" onclick="emailResults()">📧 Email my results</button><button class="btn-secondary" style="color:#c62828;border-color:#c62828" onclick="clearResults()">🗑 Clear my results</button></div>';
+    let rows = '';
+    sorted.forEach(function(r, i) {
+      let impHtml = '<span class="imp imp-same">—</span>';
+      const sameSub = sorted.slice(i + 1).find(x => x.subjectKey === r.subjectKey);
+      if (sameSub) {
+        const d = r.pct - sameSub.pct;
+        if (d > 0) impHtml = '<span class="imp imp-up">↑ +' + d + '%</span>';
+        else if (d < 0) impHtml = '<span class="imp imp-down">↓ ' + d + '%</span>';
+        else impHtml = '<span class="imp imp-same">→ same</span>';
+      }
+      rows += '<tr><td>' + escHtml(r.date) + ' ' + escHtml(r.time||'') + '</td><td>' + escHtml(r.subject) + '</td><td>' + escHtml(String(r.score)) + ' / ' + escHtml(String(r.total)) + '</td><td><span class="pct-badge ' + pctClass(r.pct) + '">' + r.pct + '%</span></td><td class="grade-cell">' + escHtml(r.grade||'—') + '</td><td>' + impHtml + '</td></tr>';
+    });
+    const tableHtml = '<div class="history-table-wrap"><table><thead><tr><th>Date &amp; time</th><th>Subject</th><th>Score</th><th>Percentage</th><th>Grade</th><th>vs previous</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    content.innerHTML = statsHtml + trendHtml + actionsHtml + tableHtml;
+  }
+  function clearResults() {
+    if (!confirm('Clear all saved results for "' + nickname + '"? This cannot be undone.')) return;
+    localStorage.setItem('gcse_results', JSON.stringify(allResults().filter(r => r.nickname !== nickname)));
+    render();
+  }
+  function emailResults() {
+    const results = myResults();
+    if (!results.length) { alert('No results to email.'); return; }
+    const sorted = results.slice().sort((a,b) => (b.ts||0) - (a.ts||0));
+    let body = 'GCSE Revision Results for ' + nickname + '\n==============================\n\n';
+    sorted.forEach(function(r) { body += r.date + ' ' + (r.time||'') + '  |  ' + r.subject + '  |  ' + r.score + '/' + r.total + '  |  ' + r.pct + '%  |  Grade: ' + (r.grade||'—') + '\n'; });
+    body += '\n-- Sent from GCSE Revision Quiz --';
+    window.location.href = 'mailto:?subject=' + encodeURIComponent('GCSE Revision Results — ' + nickname) + '&body=' + encodeURIComponent(body);
+  }
+  render();
+</script>
+</body>
+</html>
