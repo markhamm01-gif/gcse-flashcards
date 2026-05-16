@@ -58,13 +58,25 @@
     <div class="score-big" id="res-score">—</div>
     <div class="score-label" id="res-pct">—</div>
     <div class="grade-badge" id="res-grade">—</div>
+    <div class="res-summary-stats" id="res-summary-stats"></div>
     <div class="results-btns">
       <button class="btn-primary"    onclick="quizRetry()">🔁 Try Again</button>
       <button class="btn-secondary"  onclick="quizHome()">🏠 All Subjects</button>
+      <button class="btn-copy"       onclick="copyResults()" id="btn-copy">📋 Copy Results</button>
     </div>
+    <div class="copy-confirm" id="copy-confirm" style="display:none">✅ Results copied to clipboard!</div>
   </div>
 
-  <div class="review-section">
+  <div class="review-toggle-row" id="review-toggle-row" style="display:none">
+    <button class="btn-detail-toggle" id="btn-detail-toggle" onclick="toggleDetailFeedback()">
+      📋 View Detailed Feedback
+    </button>
+    <button class="btn-expand-all" id="btn-expand-all" onclick="toggleAllExplanations()" style="display:none">
+      Show All Explanations
+    </button>
+  </div>
+
+  <div class="review-section" id="review-section" style="display:none">
     <div id="review-list"></div>
   </div>
 
