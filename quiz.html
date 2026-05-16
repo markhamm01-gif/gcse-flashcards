@@ -7,52 +7,31 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <header>
   <div>
     <div class="logo">GCSE <span>Revision</span> Quiz</div>
     <div class="sub" id="quiz-subject-title">Loading…</div>
   </div>
 </header>
-
-<!-- ═══ QUIZ SCREEN ═══ -->
 <div id="quiz-screen" class="quiz-wrap">
-
   <a class="back-link" href="index.html">← Back to subjects</a>
-
-  <!-- Progress -->
   <div class="progress-row">
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
-    </div>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
     <div class="progress-label" id="progress-label">0 / 20 done</div>
   </div>
-
-  <!-- Timer -->
   <div class="timer-row">
-    <div class="timer-bar-bg">
-      <div class="timer-bar-fill" id="timer-fill" style="width:100%"></div>
-    </div>
+    <div class="timer-bar-bg"><div class="timer-bar-fill" id="timer-fill" style="width:100%"></div></div>
     <div class="timer-digits" id="timer-digits">—</div>
   </div>
-
-  <!-- Question card -->
   <div class="question-card">
-    <div class="q-meta">
-      <span id="q-subject">AQA</span> &nbsp;|&nbsp; <span id="q-number">Question 1 of 20</span>
-    </div>
+    <div class="q-meta"><span id="q-subject">AQA</span> &nbsp;|&nbsp; <span id="q-number">Question 1 of 20</span></div>
     <div class="q-text" id="q-text"></div>
     <div id="answer-area"></div>
     <div class="timeup-notice" id="timeup-notice">⏱ Time's up! Moving to the next question…</div>
   </div>
-
 </div>
-
-<!-- ═══ RESULTS SCREEN ═══ -->
 <div id="results-screen" class="results-wrap" style="display:none">
-
   <a class="back-link" href="index.html">← Choose another subject</a>
-
   <div class="results-card">
     <h2 id="res-subject">Results</h2>
     <div class="score-big" id="res-score">—</div>
@@ -60,28 +39,19 @@
     <div class="grade-badge" id="res-grade">—</div>
     <div class="res-summary-stats" id="res-summary-stats"></div>
     <div class="results-btns">
-      <button class="btn-primary"    onclick="quizRetry()">🔁 Try Again</button>
-      <button class="btn-secondary"  onclick="quizHome()">🏠 All Subjects</button>
-      <button class="btn-copy"       onclick="copyResults()" id="btn-copy">📋 Copy Results</button>
+      <button class="btn-primary"   onclick="quizRetry()">🔁 Try Again</button>
+      <button class="btn-secondary" onclick="quizHome()">🏠 All Subjects</button>
+      <button class="btn-email"     onclick="emailResults()">📧 Email Results</button>
     </div>
-    <div class="copy-confirm" id="copy-confirm" style="display:none">✅ Results copied to clipboard!</div>
   </div>
-
   <div class="review-toggle-row" id="review-toggle-row" style="display:none">
-    <button class="btn-detail-toggle" id="btn-detail-toggle" onclick="toggleDetailFeedback()">
-      📋 View Detailed Feedback
-    </button>
-    <button class="btn-expand-all" id="btn-expand-all" onclick="toggleAllExplanations()" style="display:none">
-      Show All Explanations
-    </button>
+    <button class="btn-detail-toggle" id="btn-detail-toggle" onclick="toggleDetailFeedback()">📋 View Detailed Feedback</button>
+    <button class="btn-expand-all" id="btn-expand-all" onclick="toggleAllExplanations()" style="display:none">Show All Explanations</button>
   </div>
-
   <div class="review-section" id="review-section" style="display:none">
     <div id="review-list"></div>
   </div>
-
 </div>
-
 <script src="quiz.js"></script>
 </body>
 </html>
