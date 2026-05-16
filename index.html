@@ -1,114 +1,340 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GCSE Revision Quiz</title>
-<link rel="stylesheet" href="style.css">
-<style>
-.home-intro { max-width: 900px; margin: 32px auto 0; padding: 0 20px; }
-.home-intro h1 { font-size: 1.6rem; margin-bottom: 6px; }
-.home-intro p { color: #6b7280; font-size: .95rem; margin-bottom: 28px; }
-.aqa-badge {
-display: inline-block;
-background: #e8a020;
-color: #fff;
-font-size: .75rem;
-font-weight: 700;
-padding: 3px 10px;
-border-radius: 99px;
-margin-bottom: 12px;
-letter-spacing: .5px;
-}
-.visitor-badge {
-display: inline-flex;
-align-items: center;
-gap: 5px;
-background: #f0f4ff;
-border: 1px solid #c7d2fe;
-border-radius: 99px;
-padding: 3px 12px;
-font-size: .78rem;
-color: #4338ca;
-font-weight: 600;
-margin-left: 12px;
-vertical-align: middle;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GCSE Revision Quiz</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+
+    /* ── HERO ── */
+    .hero {
+      width: 100%;
+      overflow: hidden;
+      display: block;
+    }
+    .hero img {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+      object-position: center 30%;
+      display: block;
+    }
+    @media (max-width: 520px) {
+      .hero img { height: 220px; }
+    }
+
+    /* ── LANDING CARD ── */
+    .landing-card {
+      max-width: 520px;
+      margin: -44px auto 0;
+      position: relative;
+      z-index: 10;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 28px rgba(0,0,0,.15);
+      padding: 28px 28px 22px;
+    }
+    @media (max-width: 560px) {
+      .landing-card { margin: -32px 14px 0; padding: 20px 16px 18px; }
+    }
+
+    .landing-card h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #1a3a6b;
+      margin-bottom: 4px;
+    }
+    .landing-subtitle {
+      font-size: .88rem;
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+
+    .name-label {
+      display: block;
+      font-size: .85rem;
+      font-weight: 600;
+      color: #1a3a6b;
+      margin-bottom: 6px;
+    }
+    .name-helper {
+      display: block;
+      font-size: .78rem;
+      color: #9aa3b2;
+      margin-bottom: 8px;
+    }
+    .name-row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+      margin-bottom: 12px;
+    }
+    .name-input {
+      flex: 1;
+      padding: 11px 14px;
+      border: 2px solid #dde1ea;
+      border-radius: 10px;
+      font-size: .97rem;
+      font-family: inherit;
+      color: #1c1c1c;
+      transition: border-color .15s;
+    }
+    .name-input:focus { outline: none; border-color: #1a3a6b; }
+    .name-input.error { border-color: #c62828; }
+
+    .start-btn {
+      background: #1a3a6b;
+      color: #fff;
+      border: none;
+      padding: 0 22px;
+      border-radius: 10px;
+      font-size: .97rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .2s;
+    }
+    .start-btn:hover { background: #122d56; }
+
+    .skip-link {
+      display: block;
+      text-align: center;
+      font-size: .84rem;
+      color: #6b7280;
+      cursor: pointer;
+      margin-bottom: 16px;
+      text-decoration: underline;
+    }
+    .skip-link:hover { color: #1a3a6b; }
+
+    .privacy-note {
+      background: #f4f6fa;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: .79rem;
+      color: #6b7280;
+      line-height: 1.55;
+    }
+    .privacy-note a { color: #1a3a6b; }
+
+    /* ── LOGGED-IN BAR ── */
+    .logged-bar {
+      max-width: 900px;
+      margin: 20px auto 0;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: .87rem;
+      color: #6b7280;
+    }
+    .logged-bar strong { color: #1a3a6b; }
+    .logged-bar a { color: #1a3a6b; font-weight: 600; text-decoration: none; }
+    .logged-bar a:hover { text-decoration: underline; }
+    .change-link {
+      background: none; border: none; color: #6b7280;
+      font-size: .82rem; cursor: pointer; text-decoration: underline; padding: 0;
+    }
+    .change-link:hover { color: #1a3a6b; }
+
+    /* ── SUBJECT SECTION ── */
+    .home-intro {
+      max-width: 900px;
+      margin: 24px auto 0;
+      padding: 0 20px;
+    }
+    .home-intro h2 { font-size: 1.2rem; margin-bottom: 6px; }
+    .home-intro p  { color: #6b7280; font-size: .92rem; margin-bottom: 22px; }
+
+    .aqa-badge {
+      display: inline-block;
+      background: #e8a020;
+      color: #fff;
+      font-size: .75rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 99px;
+      margin-bottom: 10px;
+      letter-spacing: .5px;
+    }
+
+    #subjects-section { display: none; }
+  </style>
 </head>
 <body>
+
 <header>
-<div>
-<div class="logo">GCSE <span>Revision</span> Quiz</div>
-<div class="sub">AQA Past Paper Questions &middot; Exam Conditions
-  <span class="visitor-badge" id="visitor-badge">
-    &#x1F465; <span id="visitor-count">...</span> visitors
-  </span>
-</div>
-</div>
+  <div>
+    <div class="logo">GCSE <span>Revision</span> Quiz</div>
+    <div class="sub">AQA Past Paper Questions · Exam Conditions</div>
+  </div>
 </header>
-<div class="home-intro">
-<span class="aqa-badge">AQA</span>
-<h1>Choose a subject to start your practice exam</h1>
-<p>Each quiz has 20 questions drawn from real AQA past papers. A countdown timer runs for each question &mdash; just like the real exam. At the end you'll see your score and every question you missed.</p>
+
+<!-- Hero image -->
+<div class="hero">
+  <img src="hero.jpg" alt="Student studying at a desk surrounded by books, planets, and ideas">
 </div>
-<div class="home-wrap">
-<div class="subject-grid">
-<a class="subject-card" href="quiz.html?subject=maths&name=Maths">
-<div class="icon">&#x1F4D0;</div>
-<div class="name">Maths</div>
-<div class="qs">20 questions &middot; AQA 8300</div>
-</a>
-<a class="subject-card" href="quiz.html?subject=english-lit&name=English+Literature">
-<div class="icon">&#x1F4D6;</div>
-<div class="name">English Literature</div>
-<div class="qs">20 questions &middot; AQA 8702</div>
-</a>
-<a class="subject-card" href="quiz.html?subject=english-lang&name=English+Language">
-<div class="icon">&#x270D;&#xFE0F;</div>
-<div class="name">English Language</div>
-<div class="qs">20 questions &middot; AQA 8700</div>
-</a>
-<a class="subject-card" href="quiz.html?subject=biology&name=Biology">
-<div class="icon">&#x1F9EC;</div>
-<div class="name">Biology</div>
-<div class="qs">20 questions &middot; AQA 8461</div>
-</a>
-<a class="subject-card" href="quiz.html?subject=chemistry&name=Chemistry">
-<div class="icon">&#x2697;&#xFE0F;</div>
-<div class="name">Chemistry</div>
-<div class="qs">20 questions &middot; AQA 8462</div>
-</a>
-<a class="subject-card" href="quiz.html?subject=physics&name=Physics">
-<div class="icon">&#x26A1;</div>
-<div class="name">Physics</div>
-<div class="qs">20 questions &middot; AQA 8463</div>
-</a>
-<a class="subject-card" href="quiz.html?subject=geography&name=Geography">
-<div class="icon">&#x1F30D;</div>
-<div class="name">Geography</div>
-<div class="qs">20 questions &middot; AQA 8035</div>
-</a>
-<a class="subject-card" href="quiz.html?subject=religious-studies&name=Religious+Studies">
-<div class="icon">&#x1F54A;&#xFE0F;</div>
-<div class="name">Religious Studies</div>
-<div class="qs">20 questions &middot; AQA 8062</div>
-</a>
+
+<!-- ── LANDING CARD ── -->
+<div class="landing-card" id="landing-card">
+  <h1>Welcome to your revision hub</h1>
+  <p class="landing-subtitle">Enter a nickname to track your progress, or jump straight in without tracking.</p>
+
+  <label class="name-label" for="nickname-input">Your name or nickname</label>
+  <span class="name-helper">This is only used to track your revision progress on this device.</span>
+  <div class="name-row">
+    <input
+      class="name-input"
+      id="nickname-input"
+      type="text"
+      placeholder="e.g. Alex, J, Mia…"
+      maxlength="30"
+      autocomplete="off"
+    >
+    <button class="start-btn" onclick="startWithName()">Start ▶</button>
+  </div>
+
+  <a class="skip-link" onclick="startWithoutTracking()">Continue without tracking</a>
+
+  <div class="privacy-note">
+    🔒 Your nickname and quiz results are saved only on this device and are never sent anywhere. You can <a href="history.html">view or clear your results</a> at any time.
+  </div>
 </div>
+
+<!-- ── SUBJECTS (shown after name entry) ── -->
+<div id="subjects-section">
+
+  <div class="logged-bar" id="logged-bar"></div>
+
+  <div class="home-intro">
+    <span class="aqa-badge">AQA</span>
+    <h2>Choose a subject to start your practice exam</h2>
+    <p>Each quiz has 20 questions drawn from real AQA past papers. A countdown timer runs for each question — just like the real exam. At the end you'll see your score and every question you missed.</p>
+  </div>
+
+  <div class="home-wrap">
+    <div class="subject-grid">
+
+      <a class="subject-card" href="quiz.html?subject=maths&name=Maths">
+        <div class="icon">📐</div>
+        <div class="name">Maths</div>
+        <div class="qs">20 questions · AQA 8300</div>
+      </a>
+
+      <a class="subject-card" href="quiz.html?subject=english-lit&name=English+Literature">
+        <div class="icon">📖</div>
+        <div class="name">English Literature</div>
+        <div class="qs">20 questions · AQA 8702</div>
+      </a>
+
+      <a class="subject-card" href="quiz.html?subject=english-lang&name=English+Language">
+        <div class="icon">✍️</div>
+        <div class="name">English Language</div>
+        <div class="qs">20 questions · AQA 8700</div>
+      </a>
+
+      <a class="subject-card" href="quiz.html?subject=biology&name=Biology">
+        <div class="icon">🧬</div>
+        <div class="name">Biology</div>
+        <div class="qs">20 questions · AQA 8461</div>
+      </a>
+
+      <a class="subject-card" href="quiz.html?subject=chemistry&name=Chemistry">
+        <div class="icon">⚗️</div>
+        <div class="name">Chemistry</div>
+        <div class="qs">20 questions · AQA 8462</div>
+      </a>
+
+      <a class="subject-card" href="quiz.html?subject=physics&name=Physics">
+        <div class="icon">⚡</div>
+        <div class="name">Physics</div>
+        <div class="qs">20 questions · AQA 8463</div>
+      </a>
+
+      <a class="subject-card" href="quiz.html?subject=geography&name=Geography">
+        <div class="icon">🌍</div>
+        <div class="name">Geography</div>
+        <div class="qs">20 questions · AQA 8035</div>
+      </a>
+
+      <a class="subject-card" href="quiz.html?subject=religious-studies&name=Religious+Studies">
+        <div class="icon">🕊️</div>
+        <div class="name">Religious Studies</div>
+        <div class="qs">20 questions · AQA 8062</div>
+      </a>
+
+    </div>
+  </div>
 </div>
+
 <script>
-(function(){
-  fetch('https://api.countapi.xyz/hit/gcse-flashcards-markhamm/visits')
-    .then(function(r){return r.json();})
-    .then(function(d){
-      var el=document.getElementById('visitor-count');
-      if(el&&d.value) el.textContent=d.value.toLocaleString();
-    })
-    .catch(function(){
-      var b=document.getElementById('visitor-badge');
-      if(b) b.style.display='none';
-    });
-})();
+  // On load: if nickname already set this session, skip landing card
+  (function() {
+    const saved = sessionStorage.getItem('gcse_nickname');
+    if (saved !== null) showSubjects(saved || null);
+  })();
+
+  function startWithName() {
+    const val = document.getElementById('nickname-input').value.trim();
+    const inp = document.getElementById('nickname-input');
+    if (!val) {
+      inp.classList.add('error');
+      inp.focus();
+      return;
+    }
+    inp.classList.remove('error');
+    sessionStorage.setItem('gcse_nickname', val);
+    sessionStorage.setItem('gcse_tracking', 'true');
+    showSubjects(val);
+  }
+
+  function startWithoutTracking() {
+    sessionStorage.setItem('gcse_nickname', '');
+    sessionStorage.setItem('gcse_tracking', 'false');
+    showSubjects(null);
+  }
+
+  function showSubjects(nickname) {
+    document.getElementById('landing-card').style.display = 'none';
+    document.getElementById('subjects-section').style.display = 'block';
+
+    const bar = document.getElementById('logged-bar');
+    if (nickname) {
+      bar.innerHTML =
+        '<span>Revising as <strong>' + escHtml(nickname) + '</strong></span>' +
+        '<span>' +
+          '<a href="history.html">📊 My results</a>' +
+          ' &nbsp;·&nbsp; ' +
+          '<button class="change-link" onclick="changeName()">Change name</button>' +
+        '</span>';
+    } else {
+      bar.innerHTML =
+        '<span>Revising without tracking</span>' +
+        '<button class="change-link" onclick="changeName()">Add a nickname</button>';
+    }
+  }
+
+  function changeName() {
+    sessionStorage.removeItem('gcse_nickname');
+    sessionStorage.removeItem('gcse_tracking');
+    document.getElementById('landing-card').style.display = 'block';
+    document.getElementById('subjects-section').style.display = 'none';
+    const inp = document.getElementById('nickname-input');
+    inp.value = '';
+    inp.classList.remove('error');
+  }
+
+  document.getElementById('nickname-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') startWithName();
+  });
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
 </script>
+
 </body>
 </html>
