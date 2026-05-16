@@ -368,7 +368,7 @@ header .sub  { font-size: .85rem; opacity: .75; }
   transition: background .2s;
 }
 .btn-secondary:hover { background: #eef1f8; }
-.btn-copy {
+.btn-email {
   background: #fff;
   color: #2e7d32;
   border: 2px solid #2e7d32;
@@ -379,7 +379,7 @@ header .sub  { font-size: .85rem; opacity: .75; }
   cursor: pointer;
   transition: background .2s;
 }
-.btn-copy:hover { background: #e8f5e9; }
+.btn-email:hover { background: #e8f5e9; }
 
 /* Copy confirmation message */
 .copy-confirm {
