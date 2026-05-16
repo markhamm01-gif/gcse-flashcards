@@ -233,12 +233,7 @@
   }
 
   // ── Feedback panel ──
-  // correct      : was the answer correct?
-  // firstAttempt : was this their first try?
-  // revealAnswer : string to show as the correct answer (or null)
-  // showNext     : whether to show the Next Question button
   function showFeedback(correct, firstAttempt, revealAnswer, showNext) {
-    // Remove any existing feedback panel
     const existing = document.getElementById('feedback-panel');
     if (existing) existing.remove();
 
@@ -251,10 +246,8 @@
     } else if (correct && !firstAttempt) {
       panel.innerHTML = '<strong>✅ Correct on your second attempt — good work!</strong>';
     } else if (!correct && !showNext) {
-      // First wrong attempt hint
       panel.innerHTML = '<strong>❌ Not quite.</strong> Have another look and try again.';
     } else {
-      // Second wrong attempt — reveal answer
       panel.innerHTML = '<strong>❌ Not correct.</strong>' +
         (revealAnswer ? '<div class="feedback-answer"><span>✓ Answer:</span> ' + escHtml(revealAnswer) + '</div>' : '');
     }
@@ -267,12 +260,10 @@
       panel.appendChild(nextBtn);
     }
 
-    // Insert after the answer area
     const area = document.getElementById('answer-area');
     area.parentNode.insertBefore(panel, area.nextSibling);
   }
 
-  // Simple keyword matching for written answers
   function markWritten(answer, keyTerms) {
     if (!answer || answer.length < 3) return false;
     const lower = answer.toLowerCase();
@@ -280,7 +271,6 @@
     keyTerms.forEach(term => {
       if (lower.includes(term.toLowerCase())) hits++;
     });
-    // Need at least half the key terms
     return hits >= Math.ceil(keyTerms.length / 2);
   }
 
@@ -305,13 +295,11 @@
         stopTimer();
         if (!answered) {
           answered = true;
-          // Disable inputs
           document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
           const sb = document.getElementById('submit-written');
           const ta = document.getElementById('written-input');
           if (sb) sb.disabled = true;
           if (ta) ta.disabled  = true;
-
           document.getElementById('timeup-notice').style.display = 'block';
           recordResult(q, false, '(time up)');
           showFeedback(false, false, q.type === 'mcq' ? q.options[q.correct] : q.modelAnswer, true);
@@ -327,7 +315,6 @@
     const fill  = document.getElementById('timer-fill');
     const digits = document.getElementById('timer-digits');
     const warn  = timeLeft <= Math.min(15, totalTime * 0.2);
-
     if (fill) {
       fill.style.width = pct + '%';
       fill.classList.toggle('warning', warn);
@@ -335,14 +322,11 @@
     if (digits) {
       const m = Math.floor(timeLeft / 60);
       const s = timeLeft % 60;
-      digits.textContent = m > 0
-        ? m + ':' + String(s).padStart(2, '0')
-        : timeLeft + 's';
+      digits.textContent = m > 0 ? m + ':' + String(s).padStart(2, '0') : timeLeft + 's';
       digits.classList.toggle('warning', warn);
     }
   }
 
-  // ── Progress ──
   function updateProgress() {
     const pct = ((current) / questions.length) * 100;
     const fill = document.getElementById('progress-fill');
@@ -351,7 +335,6 @@
     if (lbl)  lbl.textContent  = current + ' / ' + questions.length + ' done';
   }
 
-  // ── Advance ──
   function advance() {
     current++;
     if (current >= questions.length) {
@@ -375,10 +358,8 @@
     document.getElementById('res-pct').textContent     = pct + '% correct';
     document.getElementById('res-grade').textContent   = 'Grade estimate: ' + grade;
 
-    // ── Summary stats strip ──
     const summaryEl = document.getElementById('res-summary-stats');
     summaryEl.innerHTML = '';
-
     const correct  = questions.length - wrongItems.length;
     const msgEl    = document.createElement('div');
     msgEl.className = 'res-summary-msg';
@@ -387,44 +368,33 @@
       msgEl.innerHTML = '🎉 <strong>Perfect score!</strong> Every question answered correctly.';
       msgEl.classList.add('res-summary-perfect');
     } else {
-      // Areas to improve: first 3 wrong question snippets
       const areas = wrongItems.slice(0, 3).map(w => {
         const snippet = w.question.replace(/<[^>]+>/g, '').slice(0, 60);
         return '• ' + snippet + (snippet.length >= 60 ? '…' : '');
       }).join('<br>');
-
       msgEl.innerHTML =
         '<strong>' + correct + ' correct</strong> and <strong>' + wrongItems.length + ' to review</strong>.' +
-        (wrongItems.length > 0
-          ? '<div class="res-areas"><span>Areas to focus on:</span><br>' + areas + '</div>'
-          : '');
+        (wrongItems.length > 0 ? '<div class="res-areas"><span>Areas to focus on:</span><br>' + areas + '</div>' : '');
     }
     summaryEl.appendChild(msgEl);
 
-    // ── Detail feedback section ──
     const reviewEl = document.getElementById('review-list');
     reviewEl.innerHTML = '';
 
     if (wrongItems.length === 0) {
-      // Hide detail toggle entirely on a perfect score
       const toggleRow = document.getElementById('review-toggle-row');
       if (toggleRow) toggleRow.style.display = 'none';
     } else {
-      // Show the toggle row
       const toggleRow = document.getElementById('review-toggle-row');
       if (toggleRow) toggleRow.style.display = 'flex';
-
       const h = document.createElement('h3');
       h.textContent = 'Questions to review (' + wrongItems.length + ')';
       reviewEl.appendChild(h);
-
       wrongItems.forEach((item, i) => {
         const div = document.createElement('div');
         div.className = 'review-item';
-
         const explainId = 'explain-' + i;
         const hasExplain = !!item.explain;
-
         div.innerHTML =
           '<div class="ri-q">Q' + (i + 1) + '. ' + item.question + '</div>' +
           '<div class="ri-your">Your answer: ' + escHtml(item.userAnswer) + '</div>' +
@@ -433,10 +403,37 @@
             ? '<button class="ri-toggle" onclick="toggleExplain(\'' + explainId + '\', this)">Show explanation</button>' +
               '<div class="ri-explain" id="' + explainId + '" style="display:none">' + escHtml(item.explain) + '</div>'
             : '');
-
         reviewEl.appendChild(div);
       });
     }
+
+    // ── Save result to localStorage (if tracking enabled) ──
+    saveResult(pct, grade);
+  }
+
+  function saveResult(pct, grade) {
+    const nickname = sessionStorage.getItem('gcse_nickname') || '';
+    const tracking = sessionStorage.getItem('gcse_tracking');
+    if (tracking !== 'true' || !nickname) return;
+    const now = new Date();
+    const entry = {
+      nickname : nickname,
+      subject  : subjectName,
+      subjectKey: subjectKey,
+      date     : now.toLocaleDateString('en-GB'),
+      time     : now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+      score    : score,
+      total    : questions.length,
+      pct      : pct,
+      grade    : grade,
+      wrong    : wrongItems.length,
+      ts       : now.getTime()
+    };
+    try {
+      const existing = JSON.parse(localStorage.getItem('gcse_results') || '[]');
+      existing.push(entry);
+      localStorage.setItem('gcse_results', JSON.stringify(existing));
+    } catch (e) {}
   }
 
   // ── Public: toggle detail feedback section ──
@@ -445,25 +442,21 @@
     const btn      = document.getElementById('btn-detail-toggle');
     const expandBtn = document.getElementById('btn-expand-all');
     const isHidden = section.style.display === 'none';
-
     section.style.display   = isHidden ? 'block' : 'none';
     expandBtn.style.display = isHidden ? 'inline-block' : 'none';
     btn.textContent = isHidden ? '📋 Hide Detailed Feedback' : '📋 View Detailed Feedback';
   };
 
-  // ── Public: expand/collapse all explanations at once ──
   window.toggleAllExplanations = function () {
     const btn      = document.getElementById('btn-expand-all');
     const explains = document.querySelectorAll('.ri-explain');
     const toggles  = document.querySelectorAll('.ri-toggle');
     const expanding = btn.textContent.includes('Show');
-
     explains.forEach(el => { el.style.display = expanding ? 'block' : 'none'; });
     toggles.forEach(el  => { el.textContent   = expanding ? 'Hide explanation' : 'Show explanation'; });
     btn.textContent = expanding ? 'Hide All Explanations' : 'Show All Explanations';
   };
 
-  // ── Public: toggle a single explanation ──
   window.toggleExplain = function (id, btn) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -483,7 +476,6 @@
     return '1';
   }
 
-  // ── Helpers ──
   function countWords(str) {
     return (str || '').trim().split(/\s+/).filter(w => w.length > 0).length;
   }
@@ -498,11 +490,7 @@
   }
 
   function escHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   function showError(msg) {
@@ -510,72 +498,54 @@
     if (el) el.innerHTML = '<p style="color:red;padding:20px">' + msg + '</p>';
   }
 
-  // ── Public button handlers (called from HTML) ──
   window.quizRetry = function () {
     document.getElementById('results-screen').style.display = 'none';
     document.getElementById('quiz-screen').style.display    = 'block';
     startQuiz(window.GCSE_QUESTIONS);
   };
 
-  window.quizHome = function () {
-    window.location.href = 'index.html';
-  };
+  window.quizHome = function () { window.location.href = 'index.html'; };
 
-  // ── Copy results to clipboard ──
   window.copyResults = function () {
     const pct   = Math.round((score / questions.length) * 100);
     const grade = calcGrade(pct);
     const date  = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-
     let text = '📚 GCSE Quiz Results\n';
     text += '─────────────────────\n';
     text += 'Subject : ' + subjectName + '\n';
     text += 'Date    : ' + date + '\n';
     text += 'Score   : ' + score + ' / ' + questions.length + ' (' + pct + '%)\n';
     text += 'Grade   : ' + grade + '\n';
-
     if (wrongItems.length === 0) {
       text += '\n🎉 Perfect score — every question correct!\n';
     } else {
       text += '\nQuestions to review (' + wrongItems.length + '):\n';
       wrongItems.forEach((item, i) => {
-        const q = item.question.replace(/<[^>]+>/g, ''); // strip any HTML tags
+        const q = item.question.replace(/<[^>]+>/g, '');
         text += '\n' + (i + 1) + '. ' + q + '\n';
         text += '   Your answer  : ' + item.userAnswer + '\n';
         text += '   Model answer : ' + item.correct + '\n';
         if (item.explain) text += '   Explanation  : ' + item.explain + '\n';
       });
     }
-
     text += '\n─────────────────────\n';
     text += 'Revision tool: https://markhamm01-gif.github.io/gcse-flashcards/';
-
     const showConfirm = () => {
       const confirm = document.getElementById('copy-confirm');
-      if (confirm) {
-        confirm.style.display = 'block';
-        setTimeout(() => { confirm.style.display = 'none'; }, 3000);
-      }
+      if (confirm) { confirm.style.display = 'block'; setTimeout(() => { confirm.style.display = 'none'; }, 3000); }
     };
-
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(showConfirm).catch(() => fallbackCopy(text, showConfirm));
-    } else {
-      fallbackCopy(text, showConfirm);
-    }
+    } else { fallbackCopy(text, showConfirm); }
   };
 
   function fallbackCopy(text, callback) {
     const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity  = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    try { document.execCommand('copy'); callback(); } catch (e) { /* silent fail */ }
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); callback(); } catch (e) {}
     document.body.removeChild(ta);
   }
 
-  // ── Start ──
   document.addEventListener('DOMContentLoaded', init);
 })();
