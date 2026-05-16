@@ -255,6 +255,21 @@ header .sub  { font-size: .85rem; opacity: .75; }
   border: 2px solid var(--wrong);
   color: #7f1010;
 }
+.feedback-hint {
+  margin-top: 8px;
+  font-size: .88rem;
+  color: #5a3e00;
+  background: #fff8e1;
+  border-left: 3px solid #f0c040;
+  border-radius: 4px;
+  padding: 8px 12px;
+  line-height: 1.55;
+}
+.feedback-hint em {
+  font-style: normal;
+  font-weight: 700;
+  color: #1a3a6b;
+}
 .feedback-answer {
   margin-top: 4px;
   font-size: .92rem;
