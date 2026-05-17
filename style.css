@@ -381,14 +381,6 @@ header .sub  { font-size: .85rem; opacity: .75; }
 }
 .btn-email:hover { background: #e8f5e9; }
 
-/* Copy confirmation message */
-.copy-confirm {
-  margin-top: 12px;
-  font-size: .88rem;
-  color: #2e7d32;
-  font-weight: 600;
-}
-
 /* Summary stats strip */
 .res-summary-stats { margin: 16px 0 24px; text-align: left; }
 .res-summary-msg {
