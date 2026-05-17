@@ -573,6 +573,33 @@
     btn.textContent  = isHidden ? 'Hide explanation' : 'Show explanation';
   };
 
+  window.emailResults = function () {
+    const pct   = Math.round((score / questions.length) * 100);
+    const grade = calcGrade(pct);
+    const date  = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    let body = 'GCSE Quiz Results\n';
+    body += 'Subject : ' + subjectName + '\n';
+    body += 'Date    : ' + date + '\n';
+    body += 'Score   : ' + score + ' / ' + questions.length + ' (' + pct + '%)\n';
+    body += 'Grade   : ' + grade + '\n';
+    if (wrongItems.length === 0) {
+      body += '\nPerfect score - every question correct!\n';
+    } else {
+      body += '\nQuestions to review (' + wrongItems.length + '):\n';
+      wrongItems.forEach((item, i) => {
+        const q = item.question.replace(/<[^>]+>/g, '');
+        body += '\n' + (i + 1) + '. ' + q + '\n';
+        body += '   Your answer  : ' + item.userAnswer + '\n';
+        body += '   Model answer : ' + item.correct + '\n';
+        if (item.explain) body += '   Explanation  : ' + item.explain + '\n';
+      });
+    }
+    body += '\nRevision tool: https://markhamm01-gif.github.io/gcse-flashcards/';
+    const sub = encodeURIComponent('GCSE Results - ' + subjectName + ' - ' + date);
+    const bod = encodeURIComponent(body);
+    window.location.href = 'mailto:?subject=' + sub + '&body=' + bod;
+  };
+
   function calcGrade(pct) {
     if (pct >= 90) return '8–9';
     if (pct >= 78) return '7';
@@ -620,85 +647,5 @@
     window.location.href = 'index.html';
   };
 
-  window.copyResults = function () {
-    const pct   = Math.round((score / questions.length) * 100);
-    const grade = calcGrade(pct);
-    const date  = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-
-    let text = '📚 GCSE Quiz Results\n';
-    text += '─────────────────────\n';
-    text += 'Subject : ' + subjectName + '\n';
-    text += 'Date    : ' + date + '\n';
-    text += 'Score   : ' + score + ' / ' + questions.length + ' (' + pct + '%)\n';
-    text += 'Grade   : ' + grade + '\n';
-
-    if (wrongItems.length === 0) {
-      text += '\n🎉 Perfect score — every question correct!\n';
-    } else {
-      text += '\nQuestions to review (' + wrongItems.length + '):\n';
-      wrongItems.forEach((item, i) => {
-        const q = item.question.replace(/<[^>]+>/g, '');
-        text += '\n' + (i + 1) + '. ' + q + '\n';
-        text += '   Your answer  : ' + item.userAnswer + '\n';
-        text += '   Model answer : ' + item.correct + '\n';
-        if (item.explain) text += '   Explanation  : ' + item.explain + '\n';
-      });
-    }
-
-    text += '\n─────────────────────\n';
-    text += 'Revision tool: https://markhamm01-gif.github.io/gcse-flashcards/';
-
-    const showConfirm = () => {
-      const confirm = document.getElementById('copy-confirm');
-      if (confirm) {
-        confirm.style.display = 'block';
-        setTimeout(() => { confirm.style.display = 'none'; }, 3000);
-      }
-    };
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(showConfirm).catch(() => fallbackCopy(text, showConfirm));
-    } else {
-      fallbackCopy(text, showConfirm);
-    }
-  };
-
-  function fallbackCopy(text, callback) {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity  = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    try { document.execCommand('copy'); callback(); } catch (e) {}
-    document.body.removeChild(ta);
-  }
-
   document.addEventListener('DOMContentLoaded', init);
-})();  // ── Email results ──
-  window.emailResults = function () {
-    const pct   = Math.round((score / questions.length) * 100);
-    const grade = calcGrade(pct);
-    const date  = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-    let body = 'GCSE Quiz Results\n';
-    body += 'Subject : ' + subjectName + '\n';
-    body += 'Date    : ' + date + '\n';
-    body += 'Score   : ' + score + ' / ' + questions.length + ' (' + pct + '%)\n';
-    body += 'Grade   : ' + grade + '\n';
-    if (wrongItems.length === 0) {
-      body += '\nPerfect score - every question correct!\n';
-    } else {
-      body += '\nQuestions to review (' + wrongItems.length + '):\n';
-      wrongItems.forEach((item, i) => {
-        const q = item.question.replace(/<[^>]+>/g, '');
-        body += '\n' + (i + 1) + '. ' + q + '\n';
-        body += '   Your answer  : ' + item.userAnswer + '\n';
-        body += '   Model answer : ' + item.correct + '\n';
-        if (item.explain) body += '   Explanation  : ' + item.explain + '\n';
-      });
-    }
-    body += '\nRevision tool: https://markhamm01-gif.github.io/gcse-flashcards/';
-    const sub = encodeURIComponent('GCSE Results - ' + subjectName + ' - ' + date);
-    const bod = encodeURIComponent(body);
-    window.location.href = ['mailto', ':', '?subject=', sub, '&body=', bod].join('');
-  };
+})();
